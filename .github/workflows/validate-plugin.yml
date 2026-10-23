@@ -27,7 +27,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
-          python-version: "3.11"
+          python-version: "3.14"
 
       - name: Validate JSON
         run: |
@@ -36,5 +36,11 @@ jobs:
 
       - name: Validate with Hermes
         run: |
-          pip install -e hermes-agent
+          # Hermes pins pillow==13.0.0 while its browser-harness pin wants 12.3.0;
+          # the override resolves that upstream conflict for validation only.
+          pip install uv
+          echo "pillow==13.0.0" > overrides.txt
+          uv pip install --system --override overrides.txt -e hermes-agent
+          export HERMES_HOME="$RUNNER_TEMP/hermes-home"
           hermes plugins validate plugin
+          hermes plugins doctor plugin --ci
