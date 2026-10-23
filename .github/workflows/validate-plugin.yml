@@ -1,0 +1,40 @@
+name: Validate Hermes plugin
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out plugin
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          path: plugin
+
+      - name: Check out Hermes validator
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          repository: NousResearch/hermes-agent
+          ref: 67491b50f7e5ef8be6e591d745b32758aa60c33e
+          path: hermes-agent
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.11"
+
+      - name: Validate JSON
+        run: |
+          jq -e . plugin/plugin.json >/dev/null
+          jq -e . plugin/mcp.json >/dev/null
+
+      - name: Validate with Hermes
+        run: |
+          pip install -e hermes-agent
+          hermes plugins validate plugin
